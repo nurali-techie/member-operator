@@ -110,7 +110,7 @@ func TestReconcileProvisionOK(t *testing.T) {
 		assert.Equal(t, reconcile.Result{}, res)
 	}
 
-	t.Run("ok", func(t *testing.T) {
+	t.Run("ok with 2 namespaces", func(t *testing.T) {
 		r, req, fakeClient := prepareReconcile(t, username, nsTmplSet)
 
 		// for dev
@@ -264,20 +264,20 @@ func checkNamespace(t *testing.T, cl client.Client, username, typeName string) *
 	// code - if err := meta.SetList(list, matchingObjs); err != nil {
 	// file - k8s.io/client-go/testing/fixture.go, line - 239
 
-	// labels := map[string]string{"owner": username, "type": typeName}
-	// opts := client.MatchingLabels(labels)
-	// namespaceList := &corev1.NamespaceList{}
-	// err := cl.List(context.TODO(), opts, namespaceList)
-	// require.NoError(t, err)
-	// require.NotNil(t, namespaceList)
-	// require.Equal(t, 1, len(namespaceList.Items))
-	// return &namespaceList.Items[0]
-
-	namespace := &corev1.Namespace{}
-	nsName := fmt.Sprintf("%s-%s", username, typeName)
-	err := cl.Get(context.TODO(), types.NamespacedName{Name: nsName}, namespace)
+	labels := map[string]string{"owner": username, "type": typeName}
+	opts := client.MatchingLabels(labels)
+	namespaceList := &corev1.NamespaceList{}
+	err := cl.List(context.TODO(), opts, namespaceList)
 	require.NoError(t, err)
-	return namespace
+	require.NotNil(t, namespaceList)
+	require.Equal(t, 1, len(namespaceList.Items))
+	return &namespaceList.Items[0]
+
+	// namespace := &corev1.Namespace{}
+	// nsName := fmt.Sprintf("%s-%s", username, typeName)
+	// err := cl.Get(context.TODO(), types.NamespacedName{Name: nsName}, namespace)
+	// require.NoError(t, err)
+	// return namespace
 }
 
 func checkChildren(t *testing.T, client *test.FakeClient, nsName string) {

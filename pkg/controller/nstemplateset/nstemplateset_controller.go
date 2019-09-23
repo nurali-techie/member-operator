@@ -175,8 +175,8 @@ func (r *ReconcileNSTemplateSet) ensureNamespaceResource(logger logr.Logger, nsT
 			"failed to process template for namespace type '%s'", tcNamespace.Type)
 	}
 
-	for _, rawObj := range objs {
-		acc, err := meta.Accessor(rawObj.Object)
+	for i, obj := range objs {
+		acc, err := meta.Accessor(obj)
 		if err != nil {
 			return r.wrapErrorWithStatusUpdate(logger, nsTmplSet, r.setStatusNamespaceProvisionFailed, err,
 				"invalid element in template for namespace type '%s'", tcNamespace.Type)
@@ -196,6 +196,11 @@ func (r *ReconcileNSTemplateSet) ensureNamespaceResource(logger logr.Logger, nsT
 			return r.wrapErrorWithStatusUpdate(logger, nsTmplSet, r.setStatusNamespaceProvisionFailed, err,
 				"failed to set controller reference for namespace type '%s'", tcNamespace.Type)
 		}
+		ns := &corev1.Namespace{}
+		if err := r.scheme.Convert(obj, ns, nil); err != nil {
+			return err
+		}
+		objs[i] = ns
 	}
 
 	err = tmplProcessor.Apply(objs)
